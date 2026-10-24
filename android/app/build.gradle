@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Only bundle the icon font the app actually uses.
+project.ext.vectoricons = [iconFontNames: ["MaterialCommunityIcons.ttf"]]
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 

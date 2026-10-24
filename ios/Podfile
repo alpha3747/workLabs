@@ -31,5 +31,15 @@ target 'worklabs' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Xcode 26 / newer Apple Clang rejects fmt 11.0.2's consteval format strings.
+    # Building fmt as C++17 makes it disable consteval (FMT_USE_CONSTEVAL 0).
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
   end
 end
