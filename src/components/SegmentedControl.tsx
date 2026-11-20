@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, Pressable, StyleSheet, Text, View} from 'react-native';
 
-import {colors, radius, spacing} from '../theme';
+import {fontFamily, colors, radius, spacing} from '../theme';
 
 export interface Segment<K extends string> {
   key: K;
@@ -105,7 +105,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: 10,
   },
-  label: {color: colors.textSecondary, fontWeight: '600', fontSize: 14},
+  label: {
+    fontFamily,
+    color: colors.textSecondary,
+    fontWeight: '400',
+    fontSize: 14,
+  },
   labelActive: {color: colors.text},
   count: {
     minWidth: 22,
@@ -116,6 +121,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countActive: {backgroundColor: colors.accentSoft},
-  countText: {color: colors.textMuted, fontSize: 12, fontWeight: '700'},
+  countText: {
+    fontFamily,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '400',
+  },
   countTextActive: {color: colors.accent},
 });

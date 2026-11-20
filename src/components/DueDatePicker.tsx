@@ -1,17 +1,15 @@
 import React, {useMemo, useState} from 'react';
 import {Keyboard, ScrollView, StyleSheet, Text, View} from 'react-native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import DatePicker from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {PressableScale} from './PressableScale';
-import {colors, radius, spacing} from '../theme';
+import {fontFamily, colors, radius, spacing} from '../theme';
 import {formatDueDate, getQuickDueOptions} from '../utils/date';
 
 const QUICK_ICONS: Record<string, string> = {
-  today: 'weather-sunset',
-  later: 'clock-fast',
+  tonight: 'weather-night',
   tomorrow: 'weather-sunny',
-  nextWeek: 'calendar-arrow-right',
 };
 
 interface ChipProps {
@@ -55,14 +53,24 @@ export function Chip({
 interface Props {
   value: string | null;
   onChange: (iso: string | null) => void;
-  /** Extra chips rendered before the date options (e.g. "Notes"). */
+  /** Extra chips rendered before the date options. */
   leading?: React.ReactNode;
 }
 
 /**
- * A row of one-tap due date chips (Today / Tomorrow / Next week) plus a
- * "Pick date" chip that opens the native date & time picker.
+ * A row of due date chips: "Pick date" (opens the native date & time
+ * picker) first, then Tonight (9 PM) and Tomorrow (7 AM).
  */
+/** A time that has already passed can't be reminded: move it to the next 5-minute mark. */
+function notInPast(date: Date): Date {
+  const now = Date.now();
+  if (date.getTime() > now) {
+    return date;
+  }
+  const FIVE_MIN = 5 * 60 * 1000;
+  return new Date(Math.ceil((now + 1000) / FIVE_MIN) * FIVE_MIN);
+}
+
 export function DueDatePicker({value, onChange, leading}: Props) {
   const [pickerVisible, setPickerVisible] = useState(false);
   // Computed once per mount so a selected chip stays selected while the
@@ -85,6 +93,15 @@ export function DueDatePicker({value, onChange, leading}: Props) {
         keyboardShouldPersistTaps="always"
         contentContainerStyle={styles.row}>
         {leading}
+        <Chip
+          icon={hasCustom ? 'calendar-check' : 'calendar-edit'}
+          label={hasCustom && value ? formatDueDate(value) : 'Pick date'}
+          selected={hasCustom}
+          onPress={() => {
+            Keyboard.dismiss();
+            setPickerVisible(true);
+          }}
+        />
         {quickOptions.map(option => {
           const selected = selectedQuick?.key === option.key;
           return (
@@ -101,15 +118,6 @@ export function DueDatePicker({value, onChange, leading}: Props) {
             />
           );
         })}
-        <Chip
-          icon={hasCustom ? 'calendar-check' : 'calendar-edit'}
-          label={hasCustom && value ? formatDueDate(value) : 'Pick date'}
-          selected={hasCustom}
-          onPress={() => {
-            Keyboard.dismiss();
-            setPickerVisible(true);
-          }}
-        />
         {value !== null ? (
           <Chip
             icon="close"
@@ -120,17 +128,20 @@ export function DueDatePicker({value, onChange, leading}: Props) {
         ) : null}
       </ScrollView>
 
-      <DateTimePickerModal
-        isVisible={pickerVisible}
+      <DatePicker
+        modal
+        open={pickerVisible}
         mode="datetime"
         date={pickerDate}
         minimumDate={now}
-        isDarkModeEnabled
-        accentColor={colors.accent}
-        buttonTextColorIOS={colors.accent}
+        theme="dark"
+        title="Pick date"
+        confirmText="Done"
+        cancelText="Cancel"
+        minuteInterval={5}
         onConfirm={date => {
           setPickerVisible(false);
-          onChange(date.toISOString());
+          onChange(notInPast(date).toISOString());
         }}
         onCancel={() => setPickerVisible(false)}
       />
@@ -168,12 +179,22 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: colors.accentSoft,
-    borderColor: 'rgba(0,230,204,0.45)',
+    borderColor: colors.accent,
   },
-  chipLabel: {color: colors.text, fontWeight: '600', fontSize: 14},
+  chipLabel: {fontFamily, color: colors.text, fontWeight: '400', fontSize: 14},
   chipLabelSelected: {color: colors.accent},
-  chipDetail: {color: colors.textMuted, fontSize: 12, fontWeight: '500'},
+  chipDetail: {
+    fontFamily,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '400',
+  },
   summary: {flexDirection: 'row', alignItems: 'center', gap: 6},
-  summaryText: {color: colors.textMuted, fontSize: 13, fontWeight: '500'},
+  summaryText: {
+    fontFamily,
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '400',
+  },
   summaryActive: {color: colors.textSecondary},
 });

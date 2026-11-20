@@ -20,6 +20,7 @@ import notifee from '@notifee/react-native';
 import type {NewTaskInput, Task, TaskPatch} from '../../types/task';
 import * as repo from '../../storage/taskRepository';
 import {
+  areNotificationsEnabled,
   cancelReminder,
   requestNotificationPermission,
   scheduleReminder,
@@ -118,9 +119,11 @@ export function TasksProvider({children}: {children: React.ReactNode}) {
         await cancelReminder(task.id);
         return 'none';
       }
-      // Only prompts the first time; afterwards it just reports the status,
-      // so it also notices if the user enabled notifications in Settings.
-      const allowed = await requestNotificationPermission();
+      // Check first so an already-granted permission never waits on a prompt;
+      // only ask when notifications aren't enabled yet.
+      const allowed =
+        (await areNotificationsEnabled()) ||
+        (await requestNotificationPermission());
       if (!allowed) {
         return 'blocked';
       }

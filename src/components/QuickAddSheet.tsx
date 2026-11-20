@@ -14,8 +14,8 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import type {NewTaskInput} from '../types/task';
-import {colors, radius, spacing, typography} from '../theme';
-import {Chip, DueDatePicker, DueDateSummary} from './DueDatePicker';
+import {fontFamily, colors, radius, spacing, typography} from '../theme';
+import {DueDatePicker, DueDateSummary} from './DueDatePicker';
 import {PressableScale} from './PressableScale';
 
 interface Props {
@@ -33,8 +33,6 @@ const HIDDEN_OFFSET = 420;
 export function QuickAddSheet({visible, onClose, onSubmit}: Props) {
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState('');
-  const [notes, setNotes] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [openCount, setOpenCount] = useState(0);
   const translateY = useRef(new Animated.Value(HIDDEN_OFFSET)).current;
@@ -43,8 +41,6 @@ export function QuickAddSheet({visible, onClose, onSubmit}: Props) {
   useEffect(() => {
     if (visible) {
       setTitle('');
-      setNotes('');
-      setShowNotes(false);
       setDueDate(null);
       setOpenCount(c => c + 1);
       Animated.spring(translateY, {
@@ -74,7 +70,7 @@ export function QuickAddSheet({visible, onClose, onSubmit}: Props) {
     if (!canSubmit) {
       return;
     }
-    onSubmit({title, notes, dueDate});
+    onSubmit({title, dueDate});
     close();
   };
 
@@ -120,36 +116,11 @@ export function QuickAddSheet({visible, onClose, onSubmit}: Props) {
             accessibilityLabel="Task title"
           />
 
-          {showNotes ? (
-            <TextInput
-              style={styles.notesInput}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Add notes"
-              placeholderTextColor={colors.textMuted}
-              selectionColor={colors.accent}
-              multiline
-              autoFocus
-              maxLength={2000}
-              accessibilityLabel="Task notes"
-            />
-          ) : null}
-
           <View style={styles.chips}>
             <DueDatePicker
               key={openCount}
               value={dueDate}
               onChange={setDueDate}
-              leading={
-                showNotes ? null : (
-                  <Chip
-                    icon="text-box-outline"
-                    label="Notes"
-                    onPress={() => setShowNotes(true)}
-                    accessibilityLabel="Add notes"
-                  />
-                )
-              }
             />
           </View>
 
@@ -198,19 +169,11 @@ const styles = StyleSheet.create({
   },
   heading: {...typography.overline, color: colors.accent},
   titleInput: {
+    fontFamily,
     color: colors.text,
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '400',
     paddingVertical: spacing.md,
-  },
-  notesInput: {
-    color: colors.text,
-    fontSize: 15,
-    minHeight: 44,
-    maxHeight: 120,
-    paddingTop: 0,
-    paddingBottom: spacing.md,
-    textAlignVertical: 'top',
   },
   chips: {marginTop: spacing.xs},
   footer: {

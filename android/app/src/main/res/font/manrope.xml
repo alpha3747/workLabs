@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Manrope (OFL 1.1), regular 400 only. Registered as "Manrope" in MainApplication. -->
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto">
+  <font app:fontStyle="normal" app:fontWeight="400" app:font="@font/manrope_regular" />
+</font-family>

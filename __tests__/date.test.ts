@@ -3,6 +3,7 @@ import {
   formatDueDate,
   formatTime,
   getQuickDueOptions,
+  getRescheduleDate,
   greeting,
 } from '../src/utils/date';
 
@@ -56,19 +57,16 @@ describe('greeting', () => {
 });
 
 describe('getQuickDueOptions', () => {
-  it('offers Today at 6 PM before 5 PM', () => {
-    const [first, tomorrow, nextWeek] = getQuickDueOptions(NOW);
-    expect(first.key).toBe('today');
-    expect(first.date).toEqual(d(24, 18));
-    expect(tomorrow.date).toEqual(d(25, 9));
-    // Oct 24 2026 is a Saturday → next Monday is Oct 26
-    expect(nextWeek.date).toEqual(d(26, 9));
+  it('offers Tonight 9 PM and Tomorrow 7 AM', () => {
+    const [tonight, tomorrow] = getQuickDueOptions(NOW);
+    expect(tonight.key).toBe('tonight');
+    expect(tonight.date).toEqual(d(24, 21));
+    expect(tomorrow.date).toEqual(d(25, 7));
   });
 
-  it('offers "Later" (about an hour out) in the evening', () => {
-    const [first] = getQuickDueOptions(d(24, 19, 10));
-    expect(first.key).toBe('later');
-    expect(first.date).toEqual(d(24, 20, 15));
+  it('drops Tonight once 9 PM has passed', () => {
+    const options = getQuickDueOptions(d(24, 21, 30));
+    expect(options.map(o => o.key)).toEqual(['tomorrow']);
   });
 
   it('never suggests a time in the past', () => {
@@ -78,5 +76,12 @@ describe('getQuickDueOptions', () => {
         expect(option.date.getTime()).toBeGreaterThan(now.getTime()),
       );
     }
+  });
+});
+
+describe('getRescheduleDate', () => {
+  it('is 9 PM tonight, or tomorrow once that has passed', () => {
+    expect(getRescheduleDate(NOW)).toEqual(d(24, 21));
+    expect(getRescheduleDate(d(24, 22))).toEqual(d(25, 21));
   });
 });

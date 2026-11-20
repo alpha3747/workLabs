@@ -3,7 +3,7 @@ import {Pressable, StyleSheet, Text, View} from 'react-native';
 import Toast, {type ToastConfig} from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {colors, radius, spacing} from '../theme';
+import {fontFamily, colors, radius, spacing} from '../theme';
 
 type Variant = 'success' | 'info' | 'warning' | 'danger';
 
@@ -108,13 +108,23 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   texts: {flex: 1},
-  title: {color: colors.text, fontWeight: '700', fontSize: 15},
-  message: {color: colors.textSecondary, fontSize: 13, marginTop: 2},
+  title: {fontFamily, color: colors.text, fontWeight: '400', fontSize: 15},
+  message: {
+    fontFamily,
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginTop: 2,
+  },
   action: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,
     backgroundColor: colors.accentSoft,
   },
-  actionText: {color: colors.accent, fontWeight: '800', fontSize: 14},
+  actionText: {
+    fontFamily,
+    color: colors.accent,
+    fontWeight: '400',
+    fontSize: 14,
+  },
 });

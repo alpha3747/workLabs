@@ -8,7 +8,7 @@ reminders work. Read it before making non-trivial changes.
 ```mermaid
 flowchart TD
     subgraph UI
-      S[Screens<br/>Home · TaskDetail · Onboarding · Splash]
+      S[Screens<br/>Home · TaskDetail · Splash]
       C[Components<br/>TaskCard · QuickAddSheet · …]
     end
     subgraph Domain
@@ -16,7 +16,7 @@ flowchart TD
       L[taskLogic.ts<br/>pure functions]
     end
     subgraph Platform
-      R[taskRepository / settingsRepository]
+      R[taskRepository]
       DB[(SQLite<br/>worklabs.sqlite)]
       N[notifications.ts<br/>Notifee]
     end
@@ -78,7 +78,7 @@ CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
 - The database opens once, lazily, in `getDatabase()`. It uses WAL mode for fast concurrent reads.
 - `mappers.ts` converts rows (snake_case, `0/1` booleans) to `Task` objects and back. It also drops malformed
   rows instead of crashing.
-- `settings` is a small key/value table. It currently holds the onboarding flag.
+- `settings` is a small key/value table. Nothing reads it today; it is kept for future preferences.
 
 ### Adding a migration
 
@@ -118,12 +118,11 @@ The provider also reloads from the database when:
 
 ### Derived data
 
-Screens never store derived data. Sections, counts, search results and stats are computed with `useMemo` from
+Screens never store derived data. Sections and counts are computed with `useMemo` from
 `tasks` and `now`, using the pure functions in `taskLogic.ts`:
 
 - `groupActiveTasks(tasks, now)` splits tasks into Overdue, Today, Tomorrow, Upcoming and No date. Within a
   section, tasks are ordered by due date, then priority, then creation time.
-- `getStats(tasks, now)` returns the numbers for the progress card.
 - `useNow()` ticks every minute and when the app is foregrounded, so "Overdue" labels stay accurate.
 
 ## Reminders
@@ -135,6 +134,7 @@ the rules simple:
 | -------------------------------------- | ---------------------------------------- |
 | Task created or rescheduled with a future due date | `createTriggerNotification` (replaces any existing reminder) |
 | Task completed, deleted or date cleared | `cancelNotification(task.id)`            |
+| Reschedule tapped on a notification   | Due date moves to 9 PM that night (or tomorrow, if 9 PM has passed) and the reminder is re-scheduled |
 | App launch                             | `syncReminders()` reconciles scheduled reminders against the database |
 
 - **Permissions.** The app asks when you first set a due date, not at launch. On iOS this uses
@@ -146,7 +146,7 @@ the rules simple:
   `scheduleReminder` checks `canScheduleExactAlarms()` first and falls back to a regular (WorkManager) trigger.
   Note: Google Play restricts `USE_EXACT_ALARM` to alarm, calendar and reminder-style apps. Mention the
   reminder use case when you publish.
-- **Mark as done.** This is an Android action plus an iOS category. When the app is killed, `index.js` registers
+- **Mark as done and Reschedule.** These are Android actions plus an iOS category. When the app is killed, `index.js` registers
   `notifee.onBackgroundEvent`, which runs `handleNotificationEvent` headlessly and updates SQLite directly.
 
 ## Navigation
@@ -155,7 +155,6 @@ The app uses a native stack (`src/navigation/types.ts` holds the typed params):
 
 ```
 Splash (not a route; shown while the DB opens)
-  └─ Onboarding  → shown only on first launch (flag in `settings`)
   └─ Home
        └─ TaskDetail { taskId }
 ```
@@ -167,11 +166,10 @@ leaving the screen), and goes back automatically if the task is deleted.
 
 All visual values come from `src/theme/index.ts`:
 
-- **Colors.** A near-black background (`#07090C`) with layered surfaces, plus the brand teal (`#00E6CC`) and
-  semantic colors (danger, warning, success, info), each with a matching "soft" tint for backgrounds.
-- **Spacing, radius and typography.** Shared scales, so components line up.
-- **Priority metadata.** `PRIORITY_META` holds each priority's label, color and icon, and is used everywhere
-  priorities are shown.
+- **Colors.** A near-black background (`#0B0B0C`) with layered surfaces, one teal accent (`#19C3B1`) and red
+  (`#F2555F`) for overdue and delete. Warning, success and info map to neutral gray.
+- **Typography.** Manrope (registered natively on Android in `MainApplication.kt`), weight 400 only.
+- **Spacing and radius.** Shared scales, so components line up.
 
 The native launch screens (iOS `LaunchScreen.storyboard`, Android `windowBackground`) use the same background color,
 so there's no flash between the OS splash and the animated JS splash.
@@ -182,8 +180,8 @@ Business logic is kept free of React and native modules so it can be tested in p
 
 | Test file                       | Covers                                                                        |
 | ------------------------------- | ----------------------------------------------------------------------------- |
-| `__tests__/taskLogic.test.ts`   | Creating and updating tasks, completion, overdue rules, grouping, sorting, search, stats |
-| `__tests__/date.test.ts`        | Formatting, relative days, quick-date suggestions (never in the past)         |
+| `__tests__/taskLogic.test.ts`   | Creating and updating tasks, completion, overdue rules, grouping, sorting, search matching, stats helpers |
+| `__tests__/date.test.ts`        | Formatting, relative days, quick-date options (Tonight 9 PM, Tomorrow 7 AM, never in the past) and the reschedule time         |
 | `__tests__/mappers.test.ts`     | DB row ↔ Task round-trips and sanitising bad rows                             |
 
 All time-dependent functions take `now` as a parameter, so the tests are deterministic.

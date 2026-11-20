@@ -3,7 +3,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import type {Priority, Task} from '../types/task';
-import {PRIORITY_META, colors, radius, spacing} from '../theme';
+import {fontFamily, PRIORITY_META, colors, radius, spacing} from '../theme';
 import {formatDueDate} from '../utils/date';
 import {isOverdue} from '../features/tasks/taskLogic';
 
@@ -55,5 +55,5 @@ const styles = StyleSheet.create({
   },
   overdue: {backgroundColor: colors.dangerSoft},
   neutral: {backgroundColor: 'rgba(255,255,255,0.05)'},
-  text: {fontSize: 12, fontWeight: '600'},
+  text: {fontFamily, fontSize: 12, fontWeight: '400'},
 });

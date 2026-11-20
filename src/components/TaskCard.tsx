@@ -4,7 +4,14 @@ import {Swipeable} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import type {Task} from '../types/task';
-import {PRIORITY_META, colors, radius, spacing, typography} from '../theme';
+import {
+  fontFamily,
+  PRIORITY_META,
+  colors,
+  radius,
+  spacing,
+  typography,
+} from '../theme';
 import {isOverdue} from '../features/tasks/taskLogic';
 import {Checkbox} from './Checkbox';
 import {DueBadge, PriorityBadge} from './Badges';
@@ -46,7 +53,7 @@ function SwipeAction({
         side === 'left' ? styles.actionLeft : styles.actionRight,
       ]}>
       <Animated.View style={[styles.actionContent, {transform: [{scale}]}]}>
-        <Icon name={icon} size={22} color="#fff" />
+        <Icon name={icon} size={22} color={colors.onAccent} />
         <Text style={styles.actionLabel}>{label}</Text>
       </Animated.View>
     </View>
@@ -72,7 +79,7 @@ function TaskCardComponent({task, now, onPress, onToggle, onDelete}: Props) {
           dragX={dragX}
           icon={task.completed ? 'restore' : 'check-bold'}
           label={task.completed ? 'Undo' : 'Done'}
-          color={task.completed ? colors.info : '#12A37A'}
+          color={colors.accent}
         />
       )}
       renderRightActions={(_progress, dragX) => (
@@ -174,12 +181,16 @@ const styles = StyleSheet.create({
   cardCompleted: {opacity: 0.6},
   checkbox: {paddingTop: 1, marginRight: spacing.md},
   body: {flex: 1, gap: 4},
-  title: {...typography.bodyStrong, color: colors.text, fontSize: 16},
+  title: {
+    ...typography.bodyStrong,
+    color: colors.text,
+    fontSize: 16,
+  },
   titleDone: {
     color: colors.textMuted,
     textDecorationLine: 'line-through',
   },
-  notes: {fontSize: 14, color: colors.textSecondary},
+  notes: {fontFamily, fontSize: 14, color: colors.textSecondary},
   meta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -195,5 +206,5 @@ const styles = StyleSheet.create({
   actionLeft: {alignItems: 'flex-start', paddingLeft: spacing.xxl},
   actionRight: {alignItems: 'flex-end', paddingRight: spacing.xxl},
   actionContent: {alignItems: 'center', gap: 2},
-  actionLabel: {color: '#fff', fontSize: 12, fontWeight: '700'},
+  actionLabel: {fontFamily, color: '#fff', fontSize: 12, fontWeight: '400'},
 });

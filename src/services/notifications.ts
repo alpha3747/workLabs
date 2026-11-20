@@ -17,12 +17,13 @@ import {Linking, Platform} from 'react-native';
 
 import type {Task} from '../types/task';
 import {needsReminder} from '../features/tasks/taskLogic';
-import {formatTime} from '../utils/date';
+import {formatTime, getRescheduleDate} from '../utils/date';
 import {colors} from '../theme';
 
 export const CHANNEL_ID = 'task-reminders';
 export const CATEGORY_ID = 'task-reminder';
 export const ACTION_COMPLETE = 'complete';
+export const ACTION_RESCHEDULE = 'reschedule';
 
 let setupPromise: Promise<void> | null = null;
 
@@ -49,7 +50,10 @@ export function setupNotifications(): Promise<void> {
         await notifee.setNotificationCategories([
           {
             id: CATEGORY_ID,
-            actions: [{id: ACTION_COMPLETE, title: 'Mark as done'}],
+            actions: [
+              {id: ACTION_COMPLETE, title: 'Mark as done'},
+              {id: ACTION_RESCHEDULE, title: 'Reschedule to 9 PM'},
+            ],
           },
         ]);
       }
@@ -90,6 +94,38 @@ export async function openNotificationSettings(): Promise<void> {
   }
 }
 
+/** "9 PM" when it lands today, "tomorrow 9 PM" when 9 PM already passed. */
+function rescheduleLabel(date: Date): string {
+  const sameDay = date.toDateString() === new Date().toDateString();
+  return `Reschedule to ${sameDay ? '' : 'tomorrow '}${formatTime(date).replace(
+    ':00',
+    '',
+  )}`;
+}
+
+/** Tells the user where a rescheduled task landed. */
+export async function confirmReschedule(task: Task, when: Date): Promise<void> {
+  try {
+    await setupNotifications();
+    const sameDay = when.toDateString() === new Date().toDateString();
+    await notifee.displayNotification({
+      id: `${task.id}-rescheduled`,
+      title: 'Rescheduled',
+      body: `${task.title} · ${sameDay ? 'Tonight' : 'Tomorrow'}, ${formatTime(
+        when,
+      )}`,
+      android: {
+        channelId: CHANNEL_ID,
+        smallIcon: 'ic_launcher',
+        timeoutAfter: 6000,
+      },
+      ios: {sound: undefined},
+    });
+  } catch (error) {
+    logError('Could not confirm reschedule', error);
+  }
+}
+
 function buildNotification(task: Task): Notification {
   const due = task.dueDate ? new Date(task.dueDate) : new Date();
   return {
@@ -102,7 +138,13 @@ function buildNotification(task: Task): Notification {
       smallIcon: 'ic_launcher',
       color: colors.accent,
       pressAction: {id: 'default'},
-      actions: [{title: 'Mark as done', pressAction: {id: ACTION_COMPLETE}}],
+      actions: [
+        {title: 'Mark as done', pressAction: {id: ACTION_COMPLETE}},
+        {
+          title: rescheduleLabel(getRescheduleDate(due)),
+          pressAction: {id: ACTION_RESCHEDULE},
+        },
+      ],
     },
     ios: {
       categoryId: CATEGORY_ID,
@@ -168,6 +210,14 @@ export async function cancelReminder(taskId: string): Promise<void> {
   }
 }
 
+async function cancelScheduledReminder(taskId: string): Promise<void> {
+  try {
+    await notifee.cancelTriggerNotification(taskId);
+  } catch (error) {
+    logError('Could not cancel scheduled reminder', error);
+  }
+}
+
 /**
  * Makes the scheduled reminders match the task list. Run on launch so that
  * reminders survive reinstalls/restores and stale ones get cleaned up.
@@ -179,9 +229,11 @@ export async function syncReminders(tasks: Task[]): Promise<void> {
     const wantedIds = new Set(wanted.map(t => t.id));
 
     await Promise.all([
+      // Only drop reminders that haven't fired yet. cancelNotification would
+      // also remove one that just fired and is still sitting in the tray.
       ...[...scheduled]
         .filter(id => !wantedIds.has(id))
-        .map(id => cancelReminder(id)),
+        .map(id => cancelScheduledReminder(id)),
       ...wanted.filter(t => !scheduled.has(t.id)).map(t => scheduleReminder(t)),
     ]);
   } catch (error) {

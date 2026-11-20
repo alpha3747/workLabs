@@ -14,7 +14,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import type {ScreenProps} from '../navigation/types';
-import type {Priority, Task} from '../types/task';
+import type {Task} from '../types/task';
 import {useTask, useTasks} from '../features/tasks/TasksContext';
 import {isOverdue, sectionFor} from '../features/tasks/taskLogic';
 import {
@@ -22,20 +22,12 @@ import {
   openNotificationSettings,
 } from '../services/notifications';
 import {useNow} from '../hooks/useNow';
-import {formatDueDate, formatTimestamp} from '../utils/date';
-import {
-  PRIORITY_META,
-  PRIORITY_OPTIONS,
-  colors,
-  radius,
-  spacing,
-  typography,
-} from '../theme';
+import {formatDueDate} from '../utils/date';
+import {fontFamily, colors, radius, spacing, typography} from '../theme';
 import {Checkbox} from '../components/Checkbox';
 import {IconButton} from '../components/IconButton';
 import {Button} from '../components/Button';
 import {DueDatePicker} from '../components/DueDatePicker';
-import {PressableScale} from '../components/PressableScale';
 import {showToast} from '../components/AppToast';
 
 const SAVE_DELAY_MS = 500;
@@ -96,67 +88,6 @@ function Section({
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.card}>{children}</View>
-    </View>
-  );
-}
-
-function PriorityPicker({
-  value,
-  onChange,
-}: {
-  value: Priority;
-  onChange: (p: Priority) => void;
-}) {
-  return (
-    <View style={styles.priorityRow} accessibilityRole="radiogroup">
-      {PRIORITY_OPTIONS.map(option => {
-        const meta = PRIORITY_META[option];
-        const selected = option === value;
-        return (
-          <PressableScale
-            key={option}
-            onPress={() => onChange(option)}
-            scaleTo={0.94}
-            accessibilityRole="radio"
-            accessibilityState={{checked: selected}}
-            accessibilityLabel={`${meta.label} priority`}
-            style={[
-              styles.priorityOption,
-              selected && {
-                backgroundColor: meta.soft,
-                borderColor: meta.color,
-              },
-            ]}>
-            <Icon
-              name={meta.icon}
-              size={18}
-              color={selected ? meta.color : colors.textMuted}
-            />
-            <Text
-              style={[styles.priorityLabel, selected && {color: meta.color}]}>
-              {meta.label}
-            </Text>
-          </PressableScale>
-        );
-      })}
-    </View>
-  );
-}
-
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.infoRow}>
-      <Icon name={icon} size={18} color={colors.textMuted} />
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
@@ -296,11 +227,7 @@ export function TaskDetailScreen({
               checked={task.completed}
               onToggle={toggleComplete}
               size={30}
-              ringColor={
-                task.priority === 'none'
-                  ? colors.textMuted
-                  : PRIORITY_META[task.priority].color
-              }
+              ringColor={colors.textMuted}
               label={task.completed ? 'Mark as not done' : 'Mark as done'}
             />
           </View>
@@ -376,35 +303,6 @@ export function TaskDetailScreen({
             </Pressable>
           ) : null}
         </Section>
-
-        <Section title="Priority">
-          <PriorityPicker
-            value={task.priority}
-            onChange={priority => updateTask(task.id, {priority})}
-          />
-        </Section>
-
-        <Section title="Activity">
-          <InfoRow
-            icon="plus-circle-outline"
-            label="Created"
-            value={formatTimestamp(task.createdAt)}
-          />
-          {task.updatedAt !== task.createdAt ? (
-            <InfoRow
-              icon="pencil-outline"
-              label="Edited"
-              value={formatTimestamp(task.updatedAt)}
-            />
-          ) : null}
-          {task.completedAt ? (
-            <InfoRow
-              icon="check-circle-outline"
-              label="Completed"
-              value={formatTimestamp(task.completedAt)}
-            />
-          ) : null}
-        </Section>
       </ScrollView>
 
       <View
@@ -441,7 +339,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  pillText: {fontWeight: '700', fontSize: 13},
+  pillText: {fontFamily, fontWeight: '400', fontSize: 13},
   content: {padding: spacing.xl, paddingBottom: spacing.xxxl * 2},
   titleRow: {flexDirection: 'row', alignItems: 'flex-start'},
   titleCheckbox: {paddingTop: 6, marginRight: spacing.md},
@@ -488,7 +386,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dueTitle: {...typography.bodyStrong, color: colors.text},
-  dueSubtitle: {fontSize: 13, color: colors.textSecondary, marginTop: 2},
+  dueSubtitle: {
+    fontFamily,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
   warning: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -498,26 +401,21 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   warningText: {
+    fontFamily,
     flex: 1,
     color: colors.warning,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '400',
   },
-  priorityRow: {flexDirection: 'row', gap: spacing.sm},
-  priorityOption: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
-  },
-  priorityLabel: {fontSize: 13, fontWeight: '600', color: colors.textSecondary},
   infoRow: {flexDirection: 'row', alignItems: 'center', gap: spacing.sm},
-  infoLabel: {color: colors.textSecondary, fontSize: 14, width: 80},
-  infoValue: {flex: 1, color: colors.text, fontSize: 14, textAlign: 'right'},
+  infoLabel: {fontFamily, color: colors.textSecondary, fontSize: 14, width: 80},
+  infoValue: {
+    fontFamily,
+    flex: 1,
+    color: colors.text,
+    fontSize: 14,
+    textAlign: 'right',
+  },
   bottomBar: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,

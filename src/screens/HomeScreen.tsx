@@ -14,18 +14,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type {ScreenProps} from '../navigation/types';
 import type {NewTaskInput, Task} from '../types/task';
 import {useTasks} from '../features/tasks/TasksContext';
-import {
-  getStats,
-  groupActiveTasks,
-  matchesQuery,
-  sortCompleted,
-} from '../features/tasks/taskLogic';
+import {groupActiveTasks, sortCompleted} from '../features/tasks/taskLogic';
 import {useNow} from '../hooks/useNow';
 import {formatDueDate, formatLongDate, greeting} from '../utils/date';
-import {colors, radius, spacing, typography} from '../theme';
+import {fontFamily, colors, radius, spacing, typography} from '../theme';
 import {TaskCard} from '../components/TaskCard';
-import {ProgressCard} from '../components/ProgressCard';
-import {SearchBar} from '../components/SearchBar';
 import {SegmentedControl} from '../components/SegmentedControl';
 import {EmptyState} from '../components/EmptyState';
 import {QuickAddSheet} from '../components/QuickAddSheet';
@@ -53,16 +46,11 @@ export function HomeScreen({navigation}: ScreenProps<'Home'>) {
     clearCompleted,
   } = useTasks();
   const [tab, setTab] = useState<Tab>('active');
-  const [query, setQuery] = useState('');
   const [sheetVisible, setSheetVisible] = useState(false);
 
-  const stats = useMemo(() => getStats(tasks, now), [tasks, now]);
-  const filtered = useMemo(
-    () => tasks.filter(t => matchesQuery(t, query)),
-    [tasks, query],
-  );
-  const activeCount = filtered.filter(t => !t.completed).length;
-  const completedCount = filtered.length - activeCount;
+  const filtered = tasks;
+  const activeCount = tasks.filter(t => !t.completed).length;
+  const completedCount = tasks.length - activeCount;
 
   const sections: ListSection[] = useMemo(() => {
     if (tab === 'active') {
@@ -133,8 +121,8 @@ export function HomeScreen({navigation}: ScreenProps<'Home'>) {
   const handleClearCompleted = () => {
     Alert.alert(
       'Clear completed tasks?',
-      `${stats.completed} completed task${
-        stats.completed === 1 ? '' : 's'
+      `${completedCount} completed task${
+        completedCount === 1 ? '' : 's'
       } will be deleted.`,
       [
         {text: 'Cancel', style: 'cancel'},
@@ -173,9 +161,6 @@ export function HomeScreen({navigation}: ScreenProps<'Home'>) {
         </View>
       </View>
 
-      {tasks.length > 0 ? <ProgressCard stats={stats} /> : null}
-
-      <SearchBar value={query} onChangeText={setQuery} />
       <SegmentedControl<Tab>
         segments={[
           {key: 'active', label: 'To do', count: activeCount},
@@ -187,13 +172,7 @@ export function HomeScreen({navigation}: ScreenProps<'Home'>) {
     </View>
   );
 
-  const empty = !isLoaded ? null : query.trim() ? (
-    <EmptyState
-      icon="text-search"
-      title="No matches"
-      message={`Nothing found for “${query.trim()}”. Try another word.`}
-    />
-  ) : tab === 'completed' ? (
+  const empty = !isLoaded ? null : tab === 'completed' ? (
     <EmptyState
       icon="check-decagram-outline"
       title="Nothing completed yet"
@@ -201,15 +180,15 @@ export function HomeScreen({navigation}: ScreenProps<'Home'>) {
     />
   ) : tasks.length === 0 ? (
     <EmptyState
-      icon="flask-outline"
-      title="Your lab is empty"
-      message="Tap the + button to capture your first task. Add a due date and we'll remind you."
+      icon="check-circle-outline"
+      title="Nothing to do"
+      message="Tap + to add your first task."
     />
   ) : (
     <EmptyState
-      icon="party-popper"
+      icon="check-all"
       title="All caught up"
-      message="Every task is done. Enjoy the free time — or add something new."
+      message="Every task is done."
     />
   );
 
@@ -315,12 +294,14 @@ const styles = StyleSheet.create({
   sectionTitle: {...typography.heading, color: colors.text},
   sectionTitleDanger: {color: colors.danger},
   sectionCount: {
+    fontFamily,
     color: colors.textMuted,
-    fontWeight: '700',
+    fontWeight: '400',
     fontSize: 14,
   },
-  clear: {color: colors.danger, fontWeight: '700', fontSize: 14},
+  clear: {fontFamily, color: colors.danger, fontWeight: '400', fontSize: 14},
   hint: {
+    fontFamily,
     textAlign: 'center',
     color: colors.textMuted,
     fontSize: 12,
@@ -335,10 +316,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.accent,
-    shadowOpacity: 0.45,
-    shadowRadius: 18,
-    shadowOffset: {width: 0, height: 6},
-    elevation: 10,
+    elevation: 4,
   },
 });

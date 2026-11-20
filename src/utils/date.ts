@@ -136,64 +136,51 @@ export function greeting(now: Date = new Date()): string {
 }
 
 export interface QuickDueOption {
-  key: 'later' | 'today' | 'tomorrow' | 'nextWeek';
+  key: 'tonight' | 'tomorrow';
   label: string;
   detail: string;
   date: Date;
 }
 
-/** Rounds up to the next quarter hour. */
-function roundUpToQuarter(date: Date): Date {
-  const d = new Date(date);
-  d.setSeconds(0, 0);
-  const remainder = d.getMinutes() % 15;
-  if (remainder !== 0) {
-    d.setMinutes(d.getMinutes() + (15 - remainder));
-  }
-  return d;
+/** Hour (24h) used for "Tonight" and for rescheduling a reminder. */
+export const TONIGHT_HOUR = 21;
+/** Hour (24h) used for "Tomorrow". */
+export const TOMORROW_HOUR = 7;
+
+/**
+ * The time a reminder is pushed to when rescheduled: 9 PM tonight, or 9 PM
+ * tomorrow if it's already 9 PM or later.
+ */
+export function getRescheduleDate(now: Date = new Date()): Date {
+  const tonight = atTime(now, TONIGHT_HOUR);
+  return tonight.getTime() > now.getTime()
+    ? tonight
+    : atTime(addDays(now, 1), TONIGHT_HOUR);
 }
 
 /**
- * One-tap due date suggestions shown in the quick-add sheet.
- * Before 5 PM "Today" means 6 PM tonight; after that it becomes "Later" (~1h).
+ * One-tap due date suggestions shown after "Pick date": Tonight at 9 PM
+ * (hidden once 9 PM has passed) and Tomorrow at 7 AM.
  */
 export function getQuickDueOptions(now: Date = new Date()): QuickDueOption[] {
   const options: QuickDueOption[] = [];
 
-  if (now.getHours() < 17) {
-    const tonight = atTime(now, 18);
+  const tonight = atTime(now, TONIGHT_HOUR);
+  if (tonight.getTime() > now.getTime()) {
     options.push({
-      key: 'today',
-      label: 'Today',
+      key: 'tonight',
+      label: 'Tonight',
       detail: formatTime(tonight),
       date: tonight,
     });
-  } else {
-    const later = roundUpToQuarter(new Date(now.getTime() + 60 * 60 * 1000));
-    options.push({
-      key: 'later',
-      label: dayDiff(now, later) === 0 ? 'Later' : 'Tonight',
-      detail: formatTime(later),
-      date: later,
-    });
   }
 
-  const tomorrow = atTime(addDays(now, 1), 9);
+  const tomorrow = atTime(addDays(now, 1), TOMORROW_HOUR);
   options.push({
     key: 'tomorrow',
     label: 'Tomorrow',
     detail: formatTime(tomorrow),
     date: tomorrow,
-  });
-
-  // Next Monday (or the Monday after, if today is Monday).
-  const daysUntilMonday = (8 - now.getDay()) % 7 || 7;
-  const nextWeek = atTime(addDays(now, daysUntilMonday), 9);
-  options.push({
-    key: 'nextWeek',
-    label: 'Next week',
-    detail: `${WEEKDAYS[nextWeek.getDay()]} ${formatTime(nextWeek)}`,
-    date: nextWeek,
   });
 
   return options;

@@ -6,33 +6,39 @@ import type {Priority} from '../types/task';
  * used by a component should come from here so the look stays consistent.
  */
 export const colors = {
-  background: '#07090C',
-  surface: '#0F1318',
-  surfaceRaised: '#161B22',
-  surfacePressed: '#1D232C',
-  border: 'rgba(255,255,255,0.07)',
-  borderStrong: 'rgba(255,255,255,0.14)',
+  background: '#0B0B0C',
+  surface: '#141415',
+  surfaceRaised: '#1C1C1E',
+  surfacePressed: '#242427',
+  border: 'rgba(255,255,255,0.08)',
+  borderStrong: 'rgba(255,255,255,0.16)',
 
-  text: '#F2F5F8',
-  textSecondary: '#A3ABB8',
-  textMuted: '#69717F',
+  text: '#F4F4F5',
+  textSecondary: '#A1A1A6',
+  textMuted: '#6B6B70',
 
-  accent: '#00E6CC',
-  accentSoft: 'rgba(0,230,204,0.14)',
-  accentGlow: 'rgba(0,230,204,0.07)',
-  onAccent: '#022420',
+  // The one accent (teal) — used sparingly: FAB, checkmarks, selected state.
+  accent: '#19C3B1',
+  accentSoft: 'rgba(25,195,177,0.14)',
+  accentGlow: 'rgba(255,255,255,0.04)',
+  onAccent: '#04201C',
 
-  danger: '#FF5D6C',
-  dangerSoft: 'rgba(255,93,108,0.14)',
-  warning: '#FFB547',
-  warningSoft: 'rgba(255,181,71,0.14)',
-  success: '#34D399',
-  successSoft: 'rgba(52,211,153,0.14)',
-  info: '#60A5FA',
-  infoSoft: 'rgba(96,165,250,0.14)',
+  // Red is reserved for overdue / destructive things.
+  danger: '#F2555F',
+  dangerSoft: 'rgba(242,85,95,0.14)',
 
-  backdrop: 'rgba(0,0,0,0.62)',
+  // Everything else stays neutral on purpose.
+  warning: '#A1A1A6',
+  warningSoft: 'rgba(255,255,255,0.06)',
+  success: '#A1A1A6',
+  successSoft: 'rgba(255,255,255,0.06)',
+  info: '#A1A1A6',
+  infoSoft: 'rgba(255,255,255,0.06)',
+
+  backdrop: 'rgba(0,0,0,0.6)',
 } as const;
+
+export const fontFamily = 'Manrope';
 
 export const spacing = {
   xs: 4,
@@ -53,15 +59,16 @@ export const radius = {
 } as const;
 
 export const typography = {
-  display: {fontSize: 30, fontWeight: '800', letterSpacing: -0.6},
-  title: {fontSize: 22, fontWeight: '700', letterSpacing: -0.3},
-  heading: {fontSize: 17, fontWeight: '700'},
-  body: {fontSize: 15, fontWeight: '400', lineHeight: 21},
-  bodyStrong: {fontSize: 15, fontWeight: '600'},
-  caption: {fontSize: 13, fontWeight: '500'},
+  display: {fontFamily, fontSize: 30, fontWeight: '400', letterSpacing: -0.6},
+  title: {fontFamily, fontSize: 22, fontWeight: '400', letterSpacing: -0.3},
+  heading: {fontFamily, fontSize: 17, fontWeight: '400'},
+  body: {fontFamily, fontSize: 15, fontWeight: '400', lineHeight: 21},
+  bodyStrong: {fontFamily, fontSize: 15, fontWeight: '400'},
+  caption: {fontFamily, fontSize: 13, fontWeight: '400'},
   overline: {
+    fontFamily,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '400',
     letterSpacing: 1.1,
     textTransform: 'uppercase',
   },
@@ -79,17 +86,22 @@ export const PRIORITY_META: Record<
     soft: 'rgba(255,255,255,0.06)',
     icon: 'flag-outline',
   },
-  low: {label: 'Low', color: colors.info, soft: colors.infoSoft, icon: 'flag'},
+  low: {
+    label: 'Low',
+    color: colors.textSecondary,
+    soft: 'rgba(255,255,255,0.06)',
+    icon: 'flag-outline',
+  },
   medium: {
     label: 'Medium',
-    color: colors.warning,
-    soft: colors.warningSoft,
+    color: colors.textSecondary,
+    soft: 'rgba(255,255,255,0.08)',
     icon: 'flag',
   },
   high: {
     label: 'High',
-    color: colors.danger,
-    soft: colors.dangerSoft,
+    color: colors.text,
+    soft: 'rgba(255,255,255,0.12)',
     icon: 'flag',
   },
 };
